@@ -1,0 +1,22 @@
+# Node modules (all folders)
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# Next.js build
+.next/
+
+# Build folders
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
