@@ -18,9 +18,9 @@ router.post("/", createServiceRequest);
 router.get("/customers", protect, getAllCustomers);
 router.get("/stats", protect, getDashboardStats);
 router.get("/customer-history/:email", protect, getCustomerHistory);
-// router.get("/", protect, getAllServiceRequests);
+router.get("/", protect, getAllServiceRequests);
+router.put("/:id", protect, updateServiceStatus);
 // router.get("/:id", getServiceRequestById);
-// router.put("/:id", protect, updateServiceStatus);
 // router.delete("/:id", deleteServiceRequest);
 
 export default router;

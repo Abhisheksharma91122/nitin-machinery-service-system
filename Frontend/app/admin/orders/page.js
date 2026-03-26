@@ -9,6 +9,39 @@ import { toast } from "react-toastify";
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
 
+  // export orders to csv
+  const exportToCSV = () => {
+    if (!orders.length) {
+      toast.error("No data to export");
+      return;
+    }
+
+    // Convert data to CSV
+    const headers = ["Customer", "Machine", "Date", "Status"];
+
+    const rows = orders.map((order) => [
+      order.customerName,
+      order.machineName,
+      new Date(order.createdAt).toLocaleDateString(),
+      order.status,
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    // Create downloadable file
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "orders.csv";
+    link.click();
+
+    window.URL.revokeObjectURL(url);
+  };
+
   // 📥 Fetch orders
   const fetchOrders = async () => {
     try {
@@ -71,8 +104,7 @@ export default function AdminOrders() {
     {
       header: "Date",
       accessor: "createdAt",
-      cell: (row) =>
-        new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
       header: "Status",
@@ -85,9 +117,7 @@ export default function AdminOrders() {
         if (row.status === "pending") color = "bg-yellow-100";
 
         return (
-          <span className={`px-2 py-1 rounded ${color}`}>
-            {row.status}
-          </span>
+          <span className={`px-2 py-1 rounded ${color}`}>{row.status}</span>
         );
       },
     },
@@ -117,7 +147,7 @@ export default function AdminOrders() {
       <div className="flex justify-between">
         <h1 className="text-2xl font-bold">Orders Management</h1>
 
-        <Button>
+        <Button onClick={exportToCSV}>
           <Download className="mr-2 h-4 w-4" />
           Export CSV
         </Button>

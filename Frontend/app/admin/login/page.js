@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import FormInput from "@/components/FormInput";
 import Button from "@/components/Button";
@@ -14,6 +14,39 @@ export default function AdminLogin() {
     email: "",
     password: "",
   });
+
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      try {
+        const res = await fetch(
+          "http://localhost:5000/api/auth/verify-token",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (res.ok) {
+          // ✅ Token is valid → redirect
+          router.push("/admin/dashboard");
+        } else {
+          // ❌ Invalid token → remove it
+          localStorage.removeItem("token");
+        }
+      } catch (error) {
+        console.error("Token verification failed");
+      }
+    };
+
+    verifyToken();
+  }, [router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -41,7 +74,7 @@ export default function AdminLogin() {
 
       localStorage.setItem("token", data.token);
 
-      toast.success("Login successful ✅");
+      toast.success("Login successful");
 
       router.push("/admin/dashboard");
     } catch (error) {

@@ -22,9 +22,6 @@ export default function Navbar() {
         </nav>
         
         <div className="flex items-center gap-4">
-          <Link href="/admin/login" className="text-sm font-medium text-zinc-600 hover:text-brand-blue hidden md:block">
-            Admin Login
-          </Link>
           <Link href="/service-request">
             <Button variant="primary">Request Service</Button>
           </Link>
