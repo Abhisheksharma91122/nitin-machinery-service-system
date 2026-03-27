@@ -73,6 +73,7 @@ export default function AdminLogin() {
       }
 
       localStorage.setItem("token", data.token);
+      localStorage.setItem("adminName", data.user?.name || "Admin");
 
       toast.success("Login successful");
 

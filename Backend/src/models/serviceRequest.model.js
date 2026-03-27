@@ -2,29 +2,13 @@ import mongoose from "mongoose";
 
 const serviceRequestSchema = new mongoose.Schema(
   {
-    customerName: {
-      type: String,
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer", // 🔗 reference
       required: true,
     },
-    contactNumber: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-    },
-    machineName: {
-      type: String,
-      required: true,
-    },
-    address: {
-      type: String,
-      required: true,
-    },
-    problemDescription: {
-      type: String,
-      required: true,
-    },
+    machineName: { type: String, required: true },
+    problemDescription: { type: String, required: true },
     status: {
       type: String,
       enum: ["pending", "in-progress", "completed"],

@@ -24,6 +24,11 @@ export default function WalkinOrder() {
     try {
       const token = localStorage.getItem("token");
 
+      if (!token) {
+        toast.error("Unauthorized. Please login again.");
+        return;
+      }
+
       const res = await fetch("http://localhost:5000/api/service", {
         method: "POST",
         headers: {
@@ -48,11 +53,14 @@ export default function WalkinOrder() {
         customerName: "",
         contactNumber: "",
         email: "",
+        address: "",
         machineName: "",
         problemDescription: "",
       });
+
     } catch (error) {
-      toast.error("Server error");
+      console.error(error);
+      toast.error(error.message || "Server error");
     }
   };
 

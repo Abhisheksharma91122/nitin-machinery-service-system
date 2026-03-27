@@ -1,7 +1,7 @@
 import ServiceRequest from "../models/serviceRequest.model.js";
+import Customer from "../models/customer.js";
 
 
-// ✅ Create new service request
 export const createServiceRequest = async (req, res) => {
   try {
     const {
@@ -13,10 +13,11 @@ export const createServiceRequest = async (req, res) => {
       problemDescription,
     } = req.body;
 
-    // Basic validation
+    // Validation
     if (
       !customerName ||
       !contactNumber ||
+      !email ||
       !machineName ||
       !address ||
       !problemDescription
@@ -26,19 +27,35 @@ export const createServiceRequest = async (req, res) => {
       });
     }
 
-    const newRequest = await ServiceRequest.create({
-      customerName,
-      contactNumber,
-      email,
+    // 🔍 Check existing customer
+    let customer = await Customer.findOne({ email });
+
+    // 🆕 Create or update customer
+    if (!customer) {
+      customer = await Customer.create({
+        name: customerName,
+        contactNumber,
+        email,
+        address,
+      });
+    } else {
+      customer.name = customerName;
+      customer.contactNumber = contactNumber;
+      customer.address = address;
+      await customer.save();
+    }
+
+    // 🛠️ Create service request
+    const serviceRequest = await ServiceRequest.create({
+      customer: customer._id,
       machineName,
-      address,
       problemDescription,
     });
 
     res.status(201).json({
       success: true,
       message: "Service request created successfully",
-      data: newRequest,
+      data: serviceRequest,
     });
   } catch (error) {
     res.status(500).json({
@@ -49,21 +66,18 @@ export const createServiceRequest = async (req, res) => {
 };
 
 
-// ✅ Get all service requests (Admin)
+// ✅ Get All Service Requests (with customer details)
 export const getAllServiceRequests = async (req, res) => {
   try {
-    const requests = await ServiceRequest.find().sort({ createdAt: -1 });
+    const requests = await ServiceRequest.find()
+      .populate("customer", "name email contactNumber address");
 
-    res.status(200).json({
+    res.json({
       success: true,
-      count: requests.length,
       data: requests,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -71,7 +85,8 @@ export const getAllServiceRequests = async (req, res) => {
 // ✅ Get single request by ID
 export const getServiceRequestById = async (req, res) => {
   try {
-    const request = await ServiceRequest.findById(req.params.id);
+    const request = await ServiceRequest.findById(req.params.id)
+      .populate("customer", "name email contactNumber address");
 
     if (!request) {
       return res.status(404).json({
@@ -101,9 +116,18 @@ export const updateServiceStatus = async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    );
+    ).populate("customer", "name email");
 
-    res.json(updated);
+    if (!updated) {
+      return res.status(404).json({
+        message: "Service request not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: updated,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -154,14 +178,14 @@ export const getDashboardStats = async (req, res) => {
     });
 
     // Optional: unique customers count
-    const customers = await ServiceRequest.distinct("email");
+    const totalCustomers = await Customer.countDocuments();
 
     res.json({
       totalOrders,
       pendingOrders,
       inProgress,
       completed,
-      totalCustomers: customers.length,
+      totalCustomers,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -170,26 +194,7 @@ export const getDashboardStats = async (req, res) => {
 
 export const getAllCustomers = async (req, res) => {
   try {
-    const customers = await ServiceRequest.aggregate([
-      {
-        $group: {
-          _id: "$email",
-          name: { $first: "$customerName" },
-          contact: { $first: "$contactNumber" },
-          email: { $first: "$email" },
-          address: { $first: "$address" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          name: 1,
-          contact: 1,
-          email: 1,
-          address: 1,
-        },
-      },
-    ]);
+    const customers = await Customer.find();
 
     res.json({
       success: true,
@@ -204,11 +209,25 @@ export const getCustomerHistory = async (req, res) => {
   try {
     const { email } = req.params;
 
-    const history = await ServiceRequest.find({ email }).sort({
-      createdAt: -1,
+    // 🔍 Find customer first
+    const customer = await Customer.findOne({ email });
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found",
+      });
+    }
+
+    // 📜 Get all requests for that customer
+    const history = await ServiceRequest.find({
+      customer: customer._id,
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: history,
     });
 
-    res.json(history);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

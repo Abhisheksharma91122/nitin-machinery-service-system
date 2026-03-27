@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // export orders to csv
   const exportToCSV = () => {
@@ -20,7 +21,7 @@ export default function AdminOrders() {
     const headers = ["Customer", "Machine", "Date", "Status"];
 
     const rows = orders.map((order) => [
-      order.customerName,
+      order.customer?.name,
       order.machineName,
       new Date(order.createdAt).toLocaleDateString(),
       order.status,
@@ -44,6 +45,7 @@ export default function AdminOrders() {
 
   // 📥 Fetch orders
   const fetchOrders = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
 
@@ -54,6 +56,7 @@ export default function AdminOrders() {
       });
 
       const data = await res.json();
+      console.log(data)
 
       if (!res.ok) {
         toast.error("Failed to load orders");
@@ -63,6 +66,8 @@ export default function AdminOrders() {
       setOrders(data.data);
     } catch (err) {
       toast.error("Server error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,18 +79,19 @@ export default function AdminOrders() {
   const updateStatus = async (id, status) => {
     try {
       const token = localStorage.getItem("token");
-
-      await fetch(`http://localhost:5000/api/service/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/service/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status }),
       });
 
+      if (!res.ok) {  // ✅ add this check
+        toast.error("Failed to update status");
+        return;
+      }
+
       toast.success("Status updated ✅");
-      fetchOrders(); // refresh
+      fetchOrders();
     } catch {
       toast.error("Failed to update");
     }
@@ -95,7 +101,8 @@ export default function AdminOrders() {
   const columns = [
     {
       header: "Customer",
-      accessor: "customerName",
+      accessor: "customer",
+      cell: (row) => row.customer?.name || "N/A",
     },
     {
       header: "Machine",
@@ -126,19 +133,16 @@ export default function AdminOrders() {
   // 🔘 Actions
   const actions = (row) => (
     <div className="flex gap-2">
-      <Button
-        onClick={() => updateStatus(row._id, "completed")}
-        className="h-8 px-2"
-      >
-        Complete
-      </Button>
-
-      <Button
-        onClick={() => updateStatus(row._id, "in-progress")}
-        className="h-8 px-2"
-      >
-        In Progress
-      </Button>
+      {row.status !== "completed" && (
+        <Button onClick={() => updateStatus(row._id, "completed")} className="h-8 px-2">
+          Complete
+        </Button>
+      )}
+      {row.status !== "in-progress" && (
+        <Button onClick={() => updateStatus(row._id, "in-progress")} className="h-8 px-2">
+          In Progress
+        </Button>
+      )}
     </div>
   );
 
@@ -153,7 +157,7 @@ export default function AdminOrders() {
         </Button>
       </div>
 
-      <Table columns={columns} data={orders} actions={actions} />
+      {loading ? <div>Loading...</div> : <Table columns={columns} data={orders} actions={actions} />}
     </div>
   );
 }

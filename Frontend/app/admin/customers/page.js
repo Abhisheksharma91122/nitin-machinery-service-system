@@ -48,7 +48,7 @@ export default function AdminCustomers() {
     },
     {
       header: "Contact",
-      accessor: "contact",
+      accessor: "contactNumber",
     },
     {
       header: "Email",

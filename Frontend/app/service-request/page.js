@@ -20,13 +20,15 @@ export default function ServiceRequest() {
 
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const validate = () => {
     let newErrors = {};
     if (!formData.customerName)
       newErrors.customerName = "Customer Name is required";
-    if (!formData.contactNumber)
-      newErrors.contactNumber = "Contact Number is required";
+    if (!/^\+?\d{10,13}$/.test(formData.contactNumber)) {
+      newErrors.contactNumber = "Invalid phone number";
+    }
     if (!formData.email) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -47,6 +49,7 @@ export default function ServiceRequest() {
 
     if (!validate()) return;
 
+    setLoading(true);
     try {
       const response = await fetch("http://localhost:5000/api/service", {
         method: "POST",
@@ -61,12 +64,23 @@ export default function ServiceRequest() {
       if (response.ok) {
         toast.success("Service request submitted successfully");
         setIsSubmitted(true);
+
+        setFormData({
+          customerName: "",
+          contactNumber: "",
+          email: "",
+          address: "",
+          machineName: "",
+          problemDescription: "",
+        });
       } else {
         toast.error(data.message || "Something went wrong");
       }
     } catch (error) {
       toast.error("Server error. Please try again");
-    }
+    }finally {
+    setLoading(false);
+  }
   };
 
   const handleChange = (e) => {
@@ -190,9 +204,9 @@ export default function ServiceRequest() {
                 <div className="pt-4 flex justify-end">
                   <Button
                     type="submit"
-                    className="h-12 w-full md:w-auto px-10 text-base shadow-lg"
+                    disabled={loading}
                   >
-                    Submit Request
+                    {loading ? "Submitting..." : "Submit Request"}
                   </Button>
                 </div>
               </form>
