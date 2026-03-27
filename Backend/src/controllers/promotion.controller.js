@@ -1,6 +1,11 @@
 import Promotion from "../models/promotion.model.js";
 import Customer from "../models/customer.js";
 import nodemailer from "nodemailer";
+import dotenv from 'dotenv';
+dotenv.config();
+
+console.log("Email User:", process.env.EMAIL_USER); // Should show your email
+console.log("Email Pass exists:", process.env.EMAIL_PASS); // Should show true
 
 // Configure nodemailer — update with your SMTP credentials in .env
 const transporter = nodemailer.createTransport({
@@ -35,13 +40,18 @@ export const sendPromotion = async (req, res) => {
     });
 
     // Send emails
-    const emailPromises = customers.map((customer) =>
-      transporter.sendMail({
+    const emailPromises = customers.map((customer) => {
+      const personalizedContent = content.replace(/\${customer\.name}/g, customer.name);
+      return transporter.sendMail({
         from: `"Service Team" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject,
-        html: `<p>Hi ${customer.name},</p>${content}`,
+        html: `<p>Hi ${customer.name},</p>${personalizedContent}`,
+      }).catch(err => {
+        console.error(`Failed to send to ${customer.email}:`, err);
+        throw err;
       })
+    }
     );
 
     await Promise.allSettled(emailPromises);
