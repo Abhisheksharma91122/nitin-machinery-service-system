@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Table from "@/components/Table";
 import Button from "@/components/Button";
-import { Download, Eye } from "lucide-react";
+import { Download, Eye, CheckCircle, Clock, PlayCircle } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function AdminOrders() {
@@ -85,15 +85,11 @@ export default function AdminOrders() {
         body: JSON.stringify({ status }),
       });
 
-      if (!res.ok) {  // ✅ add this check
-        toast.error("Failed to update status");
-        return;
-      }
-
-      toast.success("Status updated ✅");
+      if (!res.ok) throw new Error();
+      toast.success(`Marked as ${status} ✅`);
       fetchOrders();
     } catch {
-      toast.error("Failed to update");
+      toast.error("Failed to update status");
     }
   };
 
@@ -102,29 +98,44 @@ export default function AdminOrders() {
     {
       header: "Customer",
       accessor: "customer",
-      cell: (row) => row.customer?.name || "N/A",
+      cell: (row) => (
+        <div className="font-medium text-zinc-900">{row.customer?.name || "N/A"}</div>
+      ),
     },
     {
       header: "Machine",
       accessor: "machineName",
+      cell: (row) => <span className="text-zinc-600">{row.machineName}</span>
     },
     {
       header: "Date",
       accessor: "createdAt",
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => (
+        <span className="text-zinc-500 text-sm">
+          {new Date(row.createdAt).toLocaleDateString('en-GB')}
+        </span>
+      ),
     },
     {
       header: "Status",
       accessor: "status",
       cell: (row) => {
-        let color = "bg-gray-100";
-
-        if (row.status === "completed") color = "bg-green-100";
-        if (row.status === "in-progress") color = "bg-blue-100";
-        if (row.status === "pending") color = "bg-yellow-100";
+        const styles = {
+          completed: "bg-green-50 text-green-700 ring-green-600/20",
+          "in-progress": "bg-blue-50 text-blue-700 ring-blue-600/20",
+          pending: "bg-amber-50 text-amber-700 ring-amber-600/20",
+        };
+        const icons = {
+          completed: <CheckCircle className="w-3 h-3 mr-1" />,
+          "in-progress": <PlayCircle className="w-3 h-3 mr-1" />,
+          pending: <Clock className="w-3 h-3 mr-1" />,
+        };
 
         return (
-          <span className={`px-2 py-1 rounded ${color}`}>{row.status}</span>
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${styles[row.status] || "bg-gray-50 text-gray-600 ring-gray-500/10"}`}>
+            {icons[row.status]}
+            {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+          </span>
         );
       },
     },
@@ -132,32 +143,48 @@ export default function AdminOrders() {
 
   // 🔘 Actions
   const actions = (row) => (
-    <div className="flex gap-2">
-      {row.status !== "completed" && (
-        <Button onClick={() => updateStatus(row._id, "completed")} className="h-8 px-2">
-          Complete
-        </Button>
-      )}
-      {row.status !== "in-progress" && (
-        <Button onClick={() => updateStatus(row._id, "in-progress")} className="h-8 px-2">
-          In Progress
-        </Button>
-      )}
+    <div className="flex items-center justify-end gap-2 w-[220px]"> 
+      <Button 
+        variant="outline"
+        onClick={() => updateStatus(row._id, "completed")} 
+        className={`h-8 px-3 text-xs ${row.status === 'completed' ? 'opacity-30 pointer-events-none' : ''}`}
+        disabled={row.status === 'completed'}
+      >
+        Complete
+      </Button>
+      
+      <Button 
+        variant="secondary"
+        onClick={() => updateStatus(row._id, "in-progress")} 
+        className={`h-8 px-3 text-xs ${row.status === 'in-progress' ? 'opacity-30 pointer-events-none' : ''}`}
+        disabled={row.status === 'in-progress'}
+      >
+        In Progress
+      </Button>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">Orders Management</h1>
+    <div className="flex flex-col gap-8 w-full max-w-6xl mx-auto py-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Orders Management</h1>
+          <p className="text-sm text-zinc-500">View and update customer machinery service requests.</p>
+        </div>
 
-        <Button onClick={exportToCSV}>
+        <Button onClick={exportToCSV} variant="primary" className="shadow-sm">
           <Download className="mr-2 h-4 w-4" />
           Export CSV
         </Button>
       </div>
 
-      {loading ? <div>Loading...</div> : <Table columns={columns} data={orders} actions={actions} />}
+      <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
+        {loading ? (
+          <div className="p-20 text-center text-zinc-500">Loading orders...</div>
+        ) : (
+          <Table columns={columns} data={orders} actions={actions} />
+        )}
+      </div>
     </div>
   );
 }
