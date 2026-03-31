@@ -1,5 +1,7 @@
 import ServiceRequest from "../models/serviceRequest.model.js";
-import Customer from "../models/customer.js";
+import Customer from "../models/customer.model.js";
+import Notification from "../models/notification.model.js";
+import { io } from "../app.js";
 
 
 export const createServiceRequest = async (req, res) => {
@@ -52,6 +54,20 @@ export const createServiceRequest = async (req, res) => {
       problemDescription,
     });
 
+    // create notification
+    const notification = await Notification.create({
+      user: serviceRequest.customer,
+      serviceRequest: serviceRequest._id,
+      message: "New service request created",
+    });
+
+    // Populate and emit to all connected admin clients
+    const populated = await Notification.findById(notification._id)
+      .populate("user", "name email contactNumber address")
+      .populate("serviceRequest", "machineName problemDescription status");
+
+    io.emit("new_notification", populated); // broadcast to all connected sockets
+
     res.status(201).json({
       success: true,
       message: "Service request created successfully",
@@ -66,7 +82,7 @@ export const createServiceRequest = async (req, res) => {
 };
 
 
-// ✅ Get All Service Requests (with customer details)
+// Get All Service Requests (with customer details)
 export const getAllServiceRequests = async (req, res) => {
   try {
     const requests = await ServiceRequest.find()
@@ -80,33 +96,6 @@ export const getAllServiceRequests = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
-// ✅ Get single request by ID
-export const getServiceRequestById = async (req, res) => {
-  try {
-    const request = await ServiceRequest.findById(req.params.id)
-      .populate("customer", "name email contactNumber address");
-
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: "Service request not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: request,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
 
 export const updateServiceStatus = async (req, res) => {
   try {
@@ -130,33 +119,6 @@ export const updateServiceStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
-  }
-};
-
-
-// ✅ Delete service request
-export const deleteServiceRequest = async (req, res) => {
-  try {
-    const request = await ServiceRequest.findById(req.params.id);
-
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: "Service request not found",
-      });
-    }
-
-    await request.deleteOne();
-
-    res.status(200).json({
-      success: true,
-      message: "Service request deleted successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
   }
 };
 
@@ -230,5 +192,42 @@ export const getCustomerHistory = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// get all service request which is unread
+export const getUnreadServiceRequests = async (req, res) => {
+  try {
+    const unreadRequests = await Notification.find({ isRead: false })
+      .populate("user", "name email contactNumber address")
+      .populate("serviceRequest", "machineName problemDescription status")
+      .sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      count: unreadRequests.length,
+      data: unreadRequests,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+// mark notification as read
+export const markAllAsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.json({
+      success: true,
+      message: "All notifications marked as read",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

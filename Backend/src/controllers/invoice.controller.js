@@ -19,11 +19,11 @@ export const createInvoice = async (req, res) => {
   }
 };
 
-// ✅ getInvoices — add populate
+//getInvoices — add populate
 export const getInvoices = async (req, res) => {
   try {
     const invoices = await Invoice.find()
-      .populate("orderId")  // ✅ populate order details
+      .populate("orderId")  //populate order details
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: invoices });

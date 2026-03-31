@@ -4,7 +4,7 @@ const serviceRequestSchema = new mongoose.Schema(
   {
     customer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer", // 🔗 reference
+      ref: "Customer", // reference
       required: true,
     },
     machineName: { type: String, required: true },

@@ -1,5 +1,5 @@
 import Promotion from "../models/promotion.model.js";
-import Customer from "../models/customer.js";
+import Customer from "../models/customer.model.js";
 import nodemailer from "nodemailer";
 import dotenv from 'dotenv';
 dotenv.config();

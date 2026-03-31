@@ -5,7 +5,6 @@ import jwt from "jsonwebtoken";
 export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -20,7 +19,7 @@ export const loginAdmin = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET, // ✅ CORRECT
+      process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
 
