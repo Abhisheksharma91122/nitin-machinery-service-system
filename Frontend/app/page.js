@@ -102,22 +102,22 @@ export default function Home() {
         <section className="py-20 bg-white border-b border-zinc-100">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl">
-                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6">
+              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl border border-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-zinc-200">
+                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
                   <Settings className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-bold text-zinc-900 mb-3">Technical Precision</h3>
                 <p className="text-zinc-600">High-grade materials & rigorous testing to ensure your equipment runs flawlessly.</p>
               </div>
-              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl shadow-sm border border-zinc-100">
-                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6">
+              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl shadow-sm border border-zinc-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-zinc-200">
+                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
                   <CheckCircle className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-bold text-zinc-900 mb-3">Long-term Relationships</h3>
                 <p className="text-zinc-600">We prioritize client success over quick fixes. Your consistent uptime is our core objective.</p>
               </div>
-              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl">
-                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6">
+              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl border border-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-zinc-200">
+                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
                   <Activity className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-bold text-zinc-900 mb-3">Local Speed</h3>

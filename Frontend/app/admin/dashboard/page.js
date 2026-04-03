@@ -154,8 +154,8 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-zinc-900 mb-4">Requests Over Last 7 Days</h3>
-          <div className="h-64 w-full" style={{ minHeight: 0, minWidth: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="min-h-[300px] w-full" style={{ minHeight: 0, minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={300}>
               <BarChart data={last7DaysData}>
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
@@ -168,9 +168,9 @@ export default function AdminDashboard() {
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-zinc-900 mb-4">Service Status Breakdown</h3>
-          <div className="h-64 w-full flex items-center justify-center">
+          <div className="min-h-[300px] w-full flex items-center justify-center">
             {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="value">
                     {pieData.map((entry, index) => (
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-zinc-600">
+          <table className="w-full text-left text-sm text-zinc-600 min-w-[650px]">
             <thead className="bg-zinc-50 border-b border-zinc-200">
               <tr>
                 <th className="px-4 py-3 font-semibold text-zinc-900 w-32">Date</th>

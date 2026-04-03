@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { Bell, Search, X } from 'lucide-react';
+import { Bell, Search, X, Menu } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 export default function AdminLayout({ children }) {
@@ -24,6 +24,8 @@ export default function AdminLayout({ children }) {
   const [allOrders, setAllOrders] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [adminName, setAdminName] = useState("Admin");
 
@@ -136,12 +138,20 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50">
-      <Sidebar />
+    <div className="flex h-screen overflow-hidden bg-zinc-50 relative">
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-6">
+        <header className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 sm:px-6">
+          <div className="flex items-center gap-3 w-full max-w-sm">
+            {/* Hamburger for mobile */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 -ml-2 hover:bg-zinc-100 rounded-lg transition-colors"
+            >
+              <Menu className="h-5 w-5 text-zinc-600" />
+            </button>
 
-          <div ref={searchRef} className="relative w-72">
+            <div ref={searchRef} className="relative w-full max-w-[280px]">
             <div
               className="flex items-center gap-3 text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 cursor-text hover:border-zinc-300 transition-colors"
               onClick={() => setIsSearchOpen(true)}
@@ -200,6 +210,7 @@ export default function AdminLayout({ children }) {
                 )}
               </div>
             )}
+          </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -269,7 +280,7 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-6 transition-all duration-300">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 transition-all duration-300">
           {children}
         </main>
       </div>
