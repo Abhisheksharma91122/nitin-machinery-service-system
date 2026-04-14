@@ -144,7 +144,7 @@ export const getDashboardStats = async (req, res) => {
     });
 
     const inProgress = await ServiceRequest.countDocuments({
-      status: "in-progress",
+      status: "in progress",
     });
 
     const completed = await ServiceRequest.countDocuments({

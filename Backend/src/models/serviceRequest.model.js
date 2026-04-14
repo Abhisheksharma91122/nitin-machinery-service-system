@@ -11,7 +11,7 @@ const serviceRequestSchema = new mongoose.Schema(
     problemDescription: { type: String, required: true },
     status: {
       type: String,
-      enum: ["pending", "in-progress", "completed"],
+      enum: ["pending", "in progress", "completed"],
       default: "pending",
     },
   },

@@ -193,7 +193,7 @@ export default function AdminLayout({ children }) {
                       <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${
                         order.status === "pending"
                           ? "bg-orange-50 text-orange-700 ring-orange-600/20"
-                          : order.status === "in-progress"
+                          : order.status === "in progress"
                             ? "bg-blue-50 text-blue-700 ring-blue-600/20"
                             : "bg-green-50 text-green-700 ring-green-600/20"
                       }`}>

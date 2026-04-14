@@ -163,13 +163,13 @@ export default function AdminOrders() {
       cell: (row) => {
         const styles = {
           completed: "bg-green-50 text-green-700 ring-green-600/20",
-          "in-progress": "bg-blue-50 text-blue-700 ring-blue-600/20",
+          "in progress": "bg-blue-50 text-blue-700 ring-blue-600/20",
           pending: "bg-amber-50 text-amber-700 ring-amber-600/20",
         };
 
         const icons = {
           completed: <CheckCircle className="w-3 h-3 mr-1" />,
-          "in-progress": <PlayCircle className="w-3 h-3 mr-1" />,
+          "in progress": <PlayCircle className="w-3 h-3 mr-1" />,
           pending: <Clock className="w-3 h-3 mr-1" />,
         };
 
@@ -205,9 +205,9 @@ export default function AdminOrders() {
         variant="secondary"
         onClick={() => updateStatus(row._id, "in progress")}
         className={`h-8 px-3 text-xs ${
-          row.status === "in-progress" ? "opacity-30 pointer-events-none" : ""
+          row.status === "in progress" ? "opacity-30 pointer-events-none" : ""
         }`}
-        disabled={row.status === "in-progress"}
+        disabled={row.status === "in progress"}
       >
         In Progress
       </Button>

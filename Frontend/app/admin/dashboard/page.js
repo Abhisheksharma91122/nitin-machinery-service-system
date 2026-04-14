@@ -115,7 +115,7 @@ export default function AdminDashboard() {
     return { name: format(date, 'MMM dd'), requests: count };
   });
 
-  const COLORS = ['#f59e0b', '#3b82f6', '#10b981']; // pending, in-progress, completed
+  const COLORS = ['#f59e0b', '#3b82f6', '#10b981']; // pending, in progress, completed
   const pieData = [
     { name: 'Pending', value: stats.pendingOrders },
     { name: 'In Progress', value: stats.inProgress },
@@ -200,7 +200,7 @@ export default function AdminDashboard() {
             >
               <option value="All">All Statuses</option>
               <option value="pending">Pending</option>
-              <option value="in-progress">In Progress</option>
+              <option value="in progress">In Progress</option>
               <option value="completed">Completed</option>
             </select>
             <select
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
                     <td className="px-4 py-3">{req.machineName}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold tracking-wide uppercase ring-1 ring-inset ${req.status === 'pending' ? 'bg-orange-50 text-orange-700 ring-orange-600/20' :
-                        req.status === 'in-progress' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                        req.status === 'in progress' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
                           'bg-green-50 text-green-700 ring-green-600/20'
                         }`}>
                         {req.status}

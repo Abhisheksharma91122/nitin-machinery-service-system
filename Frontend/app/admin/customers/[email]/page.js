@@ -114,7 +114,7 @@ export default function CustomerDetails() {
     },
     {
       name: "In Progress",
-      value: requests.filter((r) => r.status === "in-progress").length,
+      value: requests.filter((r) => r.status === "in progress").length,
     },
     {
       name: "Completed",
@@ -253,7 +253,7 @@ export default function CustomerDetails() {
             >
               <option value="All">All Statuses</option>
               <option value="pending">Pending</option>
-              <option value="in-progress">In Progress</option>
+              <option value="in progress">In Progress</option>
               <option value="completed">Completed</option>
             </select>
 
@@ -292,7 +292,7 @@ export default function CustomerDetails() {
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold tracking-wide uppercase ring-1 ring-inset ${req.status === "pending"
                           ? "bg-orange-50 text-orange-700 ring-orange-600/20"
-                          : req.status === "in-progress"
+                          : req.status === "in progress"
                             ? "bg-blue-50 text-blue-700 ring-blue-600/20"
                             : "bg-green-50 text-green-700 ring-green-600/20"
                         }`}
