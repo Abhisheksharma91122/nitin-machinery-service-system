@@ -6,8 +6,12 @@ const customerSchema = new mongoose.Schema(
     contactNumber: { type: String, required: true },
     email: { type: String, required: true, unique: true }, // unique
     address: { type: String, required: true },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Customer", customerSchema);

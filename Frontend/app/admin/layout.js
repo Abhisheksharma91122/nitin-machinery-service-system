@@ -18,16 +18,14 @@ export default function AdminLayout({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const notificationRef = useRef(null);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
-  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const [adminName, setAdminName] = useState("Admin");
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const name = localStorage.getItem("adminName");
@@ -56,7 +54,7 @@ export default function AdminLayout({ children }) {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:5000/api/service/unread", {
+      const res = await fetch(`${API_URL}/service/unread`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -70,7 +68,7 @@ export default function AdminLayout({ children }) {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:5000/api/service", {
+      const res = await fetch(`${API_URL}/service`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -88,7 +86,7 @@ export default function AdminLayout({ children }) {
 
   // Socket.io — push new notifications in real time
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL);
 
     socket.on("new_notification", (notification) => {
       setNotifications((prev) => [notification, ...prev]);
@@ -105,7 +103,7 @@ export default function AdminLayout({ children }) {
     if (opening && notifications.some((n) => !n.isRead)) {
       const token = localStorage.getItem("token");
       try {
-        await fetch("http://localhost:5000/api/service/mark-all-read", {
+        await fetch(`${API_URL}/service/mark-all-read`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         // Remove red dot immediately, keep items visible

@@ -7,17 +7,54 @@ import Button from "@/components/Button";
 import { History, Plus } from "lucide-react";
 import { toast } from "react-toastify";
 
-
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  // 📥 Fetch customers
+  // Toggle Active / Inactive
+  const toggleCustomer = async (id) => {
+    const confirmDeactivate = window.confirm(
+      "Are you sure you want to deactivate this customer?",
+    );
+    if (!confirmDeactivate) return;
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_URL}/service/customer/toggle/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message);
+        return;
+      }
+
+      toast.success(data.message);
+
+      // update UI instantly
+      setCustomers((prev) =>
+        prev.map((c) => (c._id === id ? { ...c, isActive: !c.isActive } : c)),
+      );
+    } catch {
+      toast.error("Error updating customer");
+    }
+  };
+
+  // Fetch customers
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/service/customers", {
+      const res = await fetch(`${API_URL}/service/customers`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -31,6 +68,7 @@ export default function AdminCustomers() {
       }
 
       setCustomers(data.data);
+      console.log("Fetched customers:", data.data);
     } catch {
       toast.error("Server error");
     }
@@ -58,17 +96,50 @@ export default function AdminCustomers() {
       header: "Address",
       accessor: "address",
     },
+    {
+      header: "Status",
+      accessor: "isActive",
+      cell: (row) => (
+        <span
+          className={`px-2 py-1 rounded text-xs ${
+            row.isActive
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {row.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
   ];
 
   // 🔘 Actions
   const actions = (row) => (
-    <Button
-      onClick={() => router.push(`/admin/customers/${encodeURIComponent(row.email)}`)}
-      className="h-8 text-xs px-3"
-    >
-      <History className="mr-2 h-3 w-3" />
-      Service History
-    </Button>
+    <div className="flex gap-2">
+      {/* Service History */}
+      <Button
+        onClick={() =>
+          router.push(`/admin/customers/${encodeURIComponent(row.email)}`)
+        }
+        className="h-8 text-xs px-3"
+      >
+        <History className="mr-2 h-3 w-3" />
+        History
+      </Button>
+
+      {/* 🔄 Activate / Deactivate */}
+      <Button
+        variant="outline"
+        onClick={() => toggleCustomer(row._id)}
+        className={`h-8 text-xs px-3 ${
+          row.isActive
+            ? "text-red-600 border-red-300 hover:bg-red-50"
+            : "text-green-600 border-green-300 hover:bg-green-50"
+        }`}
+      >
+        {row.isActive ? "Deactivate" : "Activate"}
+      </Button>
+    </div>
   );
 
   return (

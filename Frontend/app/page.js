@@ -1,237 +1,196 @@
+"use client";
+
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  Droplet,
   Settings,
   Activity,
-  ArrowDownToLine,
-  Link as LinkIcon,
-  Zap,
-  Wrench,
+  CheckCircle,
+  ArrowRight,
   ShieldCheck,
-  Phone,
-  Mail,
-  MapPin,
-  CheckCircle
+  Star,
+  Users
 } from 'lucide-react';
 
-
 export default function Home() {
-  const services = [
-    {
-      title: 'Pump Sales & Spares',
-      description: 'Authorized dealers for leading industrial pumps. Complete sales support and genuine spare parts.',
-      icon: Droplet,
-    },
-    {
-      title: 'Diesel/Petrol Engine Repair',
-      description: 'Specialized workshop for construction and industrial engines. Petrol/Diesel Engine Overhauling.',
-      icon: Settings,
-    },
-    {
-      title: 'Motor Rewinding',
-      description: 'Precision rewinding using high-grade copper and Class-H insulation for high HP motors.',
-      icon: Activity,
-    },
-    {
-      title: '400-Ton Hydraulic Press',
-      description: 'Removal of seized bearings, heavy pin & bushing work, and industrial straightening jobs.',
-      icon: ArrowDownToLine,
-    },
-    {
-      title: 'Hose Pipe Crimping',
-      description: 'High-pressure hydraulic hoses and custom fittings assembly with precision machine crimping.',
-      icon: LinkIcon,
-    },
-    {
-      title: 'Transformer Services',
-      description: 'Comprehensive rewinding and maintenance services for industrial transformers.',
-      icon: Zap,
-    },
-    {
-      title: 'Pump Repair Services',
-      description: 'Submersible & centrifugal repair, impeller & seal change, and site installation support.',
-      icon: Wrench,
-    },
-    {
-      title: 'Annual Maintenance (AMC)',
-      description: 'Factory-wide motor inspection, priority breakdown response, and reduced repair costs.',
-      icon: ShieldCheck,
-    }
-  ];
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-100px" },
+    transition: { duration: 0.6 }
+  };
+
+  const staggerContainer = {
+    initial: {},
+    whileInView: { transition: { staggerChildren: 0.1 } },
+    viewport: { once: true, margin: "-100px" }
+  };
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
+    <div className="flex min-h-screen flex-col bg-zinc-50 overflow-hidden">
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-brand-blue py-24 text-brand-white">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/50 to-brand-blue/90"></div>
+        {/* Animated Hero Section */}
+        <section className="relative overflow-hidden bg-brand-blue py-32 lg:py-48 text-brand-white">
+          <div className="absolute inset-0 bg-[url('/motor.avif')] bg-cover bg-center opacity-20 mix-blend-overlay animate-pulse-slow"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/50 via-brand-blue/80 to-brand-blue/95"></div>
+          
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-4xl text-center mx-auto">
-              <span className="inline-block py-1 px-3 rounded-full bg-brand-light/10 border border-brand-light/20 text-brand-light text-sm font-semibold tracking-wider mb-6">
+            <motion.div 
+              className="max-w-4xl text-center mx-auto"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <motion.span 
+                className="inline-block py-1.5 px-4 rounded-full bg-brand-light/10 border border-brand-light/20 text-brand-light text-sm font-semibold tracking-wider mb-8 shadow-sm backdrop-blur-sm"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
                 EXPERT MOTOR REWINDING & PUMP SOLUTIONS
-              </span>
-              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-7xl text-white mb-6 leading-tight">
-                Powering Industry for <br /> <span className="text-brand-light">Nearly Three Decades</span>
+              </motion.span>
+              <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl text-white mb-6 leading-tight">
+                Powering Industry for <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-light to-blue-200">Nearly Three Decades</span>
               </h1>
-              <p className="mt-4 text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-                We don't just repair equipment; we ensure the heartbeat of your production line never stops. Technical precision and customer longevity in MIDC areas.
+              <p className="mt-6 text-xl lg:text-2xl text-blue-100/90 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+                We don't just repair equipment; we ensure the heartbeat of your production line never stops. Technical precision in MIDC areas.
               </p>
-              <div className="flex items-center justify-center gap-4 flex-col sm:flex-row">
-                <Link href="/service-request">
-                  <Button variant="primary" className="!bg-white !text-blue-900 hover:!bg-blue-50 border-0 h-14 px-8 text-lg font-bold rounded-full shadow-lg transition-transform hover:scale-105 duration-200">
-                    Request Machine Service
+              
+              <motion.div 
+                className="flex items-center justify-center gap-4 flex-col sm:flex-row"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                <Link href="/services">
+                  <Button variant="primary" className="!bg-white !text-blue-900 hover:!bg-blue-50 border-0 h-14 px-8 text-lg font-bold rounded-full shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.6)] duration-300 flex items-center gap-2 group">
+                    Explore Services <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link href="#contact">
-                  <Button variant="outline" className="!border-white/40 !text-white !bg-transparent hover:!bg-white hover:!text-blue-900 h-14 px-8 text-lg font-semibold rounded-full">
+                <Link href="/contact">
+                  <Button variant="outline" className="!border-white/40 !text-white !bg-transparent hover:!bg-white/10 hover:!text-white h-14 px-8 text-lg font-semibold rounded-full backdrop-blur-sm transition-all duration-300">
                     Contact Us Today
                   </Button>
                 </Link>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
+          
+          {/* Decorative shapes */}
+          <div className="absolute top-1/4 left-10 w-72 h-72 bg-brand-light/20 rounded-full blur-3xl opacity-50 mix-blend-screen pointer-events-none"></div>
+          <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl opacity-50 mix-blend-screen pointer-events-none"></div>
         </section>
 
         {/* Why Choose Us / Advantage Section */}
-        <section className="py-20 bg-white border-b border-zinc-100">
+        <section className="py-20 lg:py-32 bg-white relative">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl border border-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-zinc-200">
-                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
-                  <Settings className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-900 mb-3">Technical Precision</h3>
-                <p className="text-zinc-600">High-grade materials & rigorous testing to ensure your equipment runs flawlessly.</p>
-              </div>
-              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl shadow-sm border border-zinc-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-zinc-200">
-                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
-                  <CheckCircle className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-900 mb-3">Long-term Relationships</h3>
-                <p className="text-zinc-600">We prioritize client success over quick fixes. Your consistent uptime is our core objective.</p>
-              </div>
-              <div className="flex flex-col items-center text-center p-6 bg-zinc-50 rounded-2xl border border-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-zinc-200">
-                <div className="h-16 w-16 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
-                  <Activity className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-900 mb-3">Local Speed</h3>
-                <p className="text-zinc-600">Rapid response for Sinnar & Nashik units to minimize downtime and revenue loss.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+            <motion.div 
+              className="text-center mb-16"
+              variants={fadeInUp}
+              initial="initial"
+              whileInView="whileInView"
+              viewport={{ once: true }}
+            >
+              <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">The Nitin Machinery Advantage</h2>
+              <p className="mt-4 text-xl text-zinc-600 max-w-2xl mx-auto">Why industrial units across Maharashtra trust us with their critical equipment.</p>
+            </motion.div>
 
-        {/* Services Section */}
-        <section id="services" className="py-24 bg-zinc-50">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl">Our Service Portfolio</h2>
-              <p className="mt-4 text-xl text-zinc-600 max-w-2xl mx-auto">Comprehensive care and expert repair solutions for your industrial equipment.</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {services.map((service, index) => (
-                <div key={index} className="group rounded-2xl bg-white p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border border-zinc-100">
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-blue/5 text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-colors duration-300">
-                    <service.icon className="h-7 w-7" />
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-3 gap-10"
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="whileInView"
+              viewport={{ once: true }}
+            >
+              {[
+                { icon: Settings, title: "Technical Precision", desc: "High-grade materials & rigorous testing to ensure your equipment runs flawlessly." },
+                { icon: CheckCircle, title: "Long-term Focus", desc: "We prioritize client success over quick fixes. Your consistent uptime is our core objective." },
+                { icon: Activity, title: "Local Speed", desc: "Rapid response for Sinnar & Nashik units to minimize downtime and revenue loss." }
+              ].map((feature, idx) => (
+                <motion.div 
+                  key={idx}
+                  variants={{
+                    initial: { opacity: 0, y: 20 },
+                    whileInView: { opacity: 1, y: 0 }
+                  }}
+                  className="group flex flex-col items-center text-center p-8 bg-white rounded-3xl border border-zinc-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.1)] hover:border-brand-blue/20"
+                >
+                  <div className="h-20 w-20 bg-gradient-to-br from-blue-50 to-brand-blue/10 text-brand-blue rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                    <feature.icon className="h-10 w-10" />
                   </div>
-                  <h3 className="mb-3 text-xl font-bold text-zinc-900 group-hover:text-brand-blue transition-colors duration-300">{service.title}</h3>
-                  <p className="text-zinc-600 leading-relaxed text-sm">{service.description}</p>
-                </div>
+                  <h3 className="text-2xl font-bold text-zinc-900 mb-4">{feature.title}</h3>
+                  <p className="text-zinc-600 leading-relaxed">{feature.desc}</p>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
+          </div>
+        </section>
 
-            <div className="mt-16 text-center">
-              <div className="inline-block bg-brand-blue/5 border border-brand-blue/10 rounded-2xl p-8 max-w-3xl">
-                <h3 className="text-2xl font-bold text-zinc-900 mb-2">Need an Annual Maintenance Contract?</h3>
-                <p className="text-zinc-600 mb-6">Get a free AMC quote today to secure your factory-wide motorized machinery.</p>
-                <Link href="#contact">
-                  <Button variant="primary" className="rounded-full px-8">Get a Free AMC Quote</Button>
+        {/* Highlight Service / CTA Section */}
+        <section className="py-24 bg-zinc-900 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-[url('/engine.avif')] bg-cover bg-center opacity-20 mix-blend-luminosity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-transparent"></div>
+          
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+              >
+                <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-brand-light/10 text-brand-light text-sm font-semibold mb-6">
+                  <Star className="w-4 h-4" /> COMPREHENSIVE SERVICE
+                </div>
+                <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl mb-6 leading-tight">
+                  From High HP Motors <br/> to Hydraulic Systems
+                </h2>
+                <p className="text-xl text-zinc-400 mb-8 leading-relaxed max-w-lg">
+                  Explore our extensive portfolio of services, including pump repairs, diesel engine overhauling, transformer maintenance, and more. We have the expertise to handle it all.
+                </p>
+                <Link href="/services">
+                  <Button variant="primary" className="h-14 px-8 text-lg font-bold rounded-full !bg-brand-blue hover:!bg-blue-600 border-0 flex items-center gap-2 group">
+                    View All Services <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
                 </Link>
+              </motion.div>
+              
+              <div className="hidden lg:block relative h-full">
+                {/* Decorative floating elements could go here */}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Contact Section */}
-        <section id="contact" className="py-24 bg-white relative">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row border border-zinc-800">
-              <div className="p-12 lg:w-1/2 flex flex-col justify-center">
-                <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4">Get in Touch</h2>
-                <p className="text-zinc-400 text-lg mb-10">
-                  Our support team is available 24/7 for emergency troubleshooting and service coordination. We are here to help your industry thrive.
-                </p>
-
-                <div className="space-y-8">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1 bg-white/10 p-3 rounded-full">
-                      <Phone className="h-6 w-6 text-brand-light" />
-                    </div>
-                    <div className="ml-4">
-                      <h4 className="text-lg font-medium text-white">Call Us (24/7)</h4>
-                      <p className="text-zinc-400 mt-1 flex flex-col sm:flex-row gap-2">
-                        <a href="tel:+919850130575" className="hover:text-white transition-colors">+91 98501 30575</a>
-                        <span className="hidden sm:inline border-r border-zinc-600"></span>
-                        <a href="tel:+919699577380" className="hover:text-white transition-colors">+91 96995 77380</a>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1 bg-white/10 p-3 rounded-full">
-                      <Mail className="h-6 w-6 text-brand-light" />
-                    </div>
-                    <div className="ml-4">
-                      <h4 className="text-lg font-medium text-white">Email Us</h4>
-                      <p className="text-zinc-400 mt-1">
-                        <a href="mailto:info@nitinmachinery.in" className="hover:text-white transition-colors">info@nitinmachinery.in</a>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1 bg-white/10 p-3 rounded-full">
-                      <MapPin className="h-6 w-6 text-brand-light" />
-                    </div>
-                    <div className="ml-4">
-                      <h4 className="text-lg font-medium text-white">Visit Workshop</h4>
-                      <p className="text-zinc-400 mt-1 leading-relaxed">
-                        593, Near Ronak Lawn, Pune Highway, <br />
-                        Sinnar, Nashik, Maharashtra - 422103
-                      </p>
-                    </div>
-                  </div>
-                </div>
+        {/* Quick Stats / Trust Section */}
+        <section className="py-20 bg-brand-blue text-white border-t border-brand-blue/20">
+           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/10">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once:true }}>
+                  <div className="text-4xl md:text-5xl font-black mb-2">25+</div>
+                  <div className="text-blue-200 text-sm md:text-base font-medium tracking-wide">YEARS EXP.</div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once:true }} transition={{ delay: 0.1}}>
+                  <div className="text-4xl md:text-5xl font-black mb-2">500+</div>
+                  <div className="text-blue-200 text-sm md:text-base font-medium tracking-wide">CLIENTS SECURED</div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once:true }} transition={{ delay: 0.2}}>
+                  <div className="text-4xl md:text-5xl font-black mb-2">24/7</div>
+                  <div className="text-blue-200 text-sm md:text-base font-medium tracking-wide">EMERGENCY SUPPORT</div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once:true }} transition={{ delay: 0.3}}>
+                  <div className="text-4xl md:text-5xl font-black mb-2">100%</div>
+                  <div className="text-blue-200 text-sm md:text-base font-medium tracking-wide">QUALITY ASSURED</div>
+                </motion.div>
               </div>
-
-              <div className="lg:w-1/2 p-12 bg-zinc-800 flex flex-col justify-center items-center text-center border-t lg:border-t-0 lg:border-l border-zinc-700">
-                <h3 className="text-2xl font-bold text-white mb-4">Request Service Directly</h3>
-                <p className="text-zinc-400 mb-8 max-w-sm">
-                  Fill out our online service request form for a structured assessment of your machinery needs.
-                </p>
-                <div className="flex flex-col gap-4 w-full max-w-xs">
-                  <Link href="/service-request" className="w-full">
-                    <Button variant="primary" className="w-full h-14 rounded-xl text-lg !bg-white !text-zinc-900 hover:!bg-zinc-100 font-bold transition-colors border-0">
-                      Fill Service Form
-                    </Button>
-                  </Link>
-                  <a href="https://wa.me/919850130575?text=Hello%20Nitin%20Machinery" target="_blank" rel="noopener noreferrer" className="w-full">
-                    <Button variant="outline" className="w-full h-14 rounded-xl !border-zinc-600 !text-white hover:!bg-zinc-700 transition-colors">
-                      Chat on WhatsApp
-                    </Button>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+           </div>
         </section>
+
       </main>
 
       <Footer />

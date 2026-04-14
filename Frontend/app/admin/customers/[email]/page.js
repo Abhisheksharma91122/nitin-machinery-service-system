@@ -27,6 +27,7 @@ export default function CustomerDetails() {
   const [filterStatus, setFilterStatus] = useState("All");
   const [sortOrder, setSortOrder] = useState("Newest");
   const [loading, setLoading] = useState(true);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -36,10 +37,10 @@ export default function CustomerDetails() {
 
         // Fetch both in parallel
         const [resHistory, resCustomers] = await Promise.all([
-          fetch(`http://localhost:5000/api/service/customer-history/${email}`, {
+          fetch(`${API_URL}/service/customer-history/${email}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`http://localhost:5000/api/service/customers`, {
+          fetch(`${API_URL}/service/customers`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);

@@ -11,11 +11,13 @@ const invoiceSchema = new mongoose.Schema(
     amount: Number,
     status: {
       type: String,
-      enum: ["paid", "unpaid", "pending"],
+      enum: ["paid", "unpaid", "pending", "cancelled"],
       default: "pending",
+      lowercase: true,
+      trim: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Invoice", invoiceSchema);

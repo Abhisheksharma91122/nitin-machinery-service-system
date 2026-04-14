@@ -17,6 +17,7 @@ export default function WalkinOrder() {
     machineName: "",
     problemDescription: "",
   });
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +30,7 @@ export default function WalkinOrder() {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/service", {
+      const res = await fetch(`${API_URL}/service`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -21,6 +21,7 @@ export default function ServiceRequest() {
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const validate = () => {
     let newErrors = {};
@@ -51,7 +52,7 @@ export default function ServiceRequest() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/service", {
+      const response = await fetch(`${API_URL}/service`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

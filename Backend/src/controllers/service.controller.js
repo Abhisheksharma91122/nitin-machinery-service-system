@@ -3,7 +3,6 @@ import Customer from "../models/customer.model.js";
 import Notification from "../models/notification.model.js";
 import { io } from "../app.js";
 
-
 export const createServiceRequest = async (req, res) => {
   try {
     const {
@@ -81,12 +80,12 @@ export const createServiceRequest = async (req, res) => {
   }
 };
 
-
 // Get All Service Requests (with customer details)
 export const getAllServiceRequests = async (req, res) => {
   try {
     const requests = await ServiceRequest.find()
-      .populate("customer", "name email contactNumber address");
+      .populate("customer", "name email contactNumber address")
+      .sort({ createdAt: -1 }); // 👈 newest first
 
     res.json({
       success: true,
@@ -99,12 +98,25 @@ export const getAllServiceRequests = async (req, res) => {
 
 export const updateServiceStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    let { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ message: "Status is required" });
+    }
+
+    status = status.toLowerCase().trim();
+
+    const allowedStatus = ["pending", "in progress", "completed", "cancelled"];
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status value",
+      });
+    }
 
     const updated = await ServiceRequest.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true }
+      { returnDocument: "after" }
     ).populate("customer", "name email");
 
     if (!updated) {
@@ -156,7 +168,7 @@ export const getDashboardStats = async (req, res) => {
 
 export const getAllCustomers = async (req, res) => {
   try {
-    const customers = await Customer.find();
+    const customers = await Customer.find({ isActive: true });
 
     res.json({
       success: true,
@@ -189,7 +201,35 @@ export const getCustomerHistory = async (req, res) => {
       success: true,
       data: history,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
+// Deactivate Customer
+export const toggleCustomerStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const customer = await Customer.findById(id);
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found",
+      });
+    }
+
+    // 🔄 Toggle active/inactive
+    customer.isActive = !customer.isActive;
+    await customer.save();
+
+    res.json({
+      success: true,
+      message: `Customer ${
+        customer.isActive ? "Activated" : "Deactivated"
+      } successfully`,
+      data: customer,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -210,14 +250,14 @@ export const getUnreadServiceRequests = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
 // mark notification as read
 export const markAllAsRead = async (req, res) => {
   try {
     await Notification.updateMany(
       { isRead: false },
-      { $set: { isRead: true } }
+      { $set: { isRead: true } },
     );
 
     res.json({
@@ -228,6 +268,39 @@ export const markAllAsRead = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+// DELETE Service Request
+export const deleteServiceRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if request exists
+    const serviceRequest = await ServiceRequest.findById(id);
+
+    if (!serviceRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Service request not found",
+      });
+    }
+
+    // Delete related notifications (important)
+    await Notification.deleteMany({ serviceRequest: id });
+
+    // Delete service request
+    await ServiceRequest.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: "Service request deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete service request -" + error.message,
     });
   }
 };

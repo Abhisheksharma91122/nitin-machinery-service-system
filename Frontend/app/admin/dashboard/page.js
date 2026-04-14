@@ -22,8 +22,8 @@ export default function AdminDashboard() {
   const [allRequests, setAllRequests] = useState([]);
   const [filterStatus, setFilterStatus] = useState("All");
   const [sortOrder, setSortOrder] = useState("Newest");
-
   const [loading, setLoading] = useState(true);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,10 +36,10 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const [resStats, resReqs] = await Promise.all([
-          fetch("http://localhost:5000/api/service/stats", {
+          fetch(`${API_URL}/service/stats`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://localhost:5000/api/service", {
+          fetch(`${API_URL}/service`, {
             headers: { Authorization: `Bearer ${token}` },
           })
         ]);

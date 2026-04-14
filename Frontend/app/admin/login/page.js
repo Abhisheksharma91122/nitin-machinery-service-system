@@ -14,6 +14,7 @@ export default function AdminLogin() {
     email: "",
     password: "",
   });
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function AdminLogin() {
 
       try {
         const res = await fetch(
-          "http://localhost:5000/api/auth/verify-token",
+          `${API_URL}/auth/verify-token`,
           {
             method: "GET",
             headers: {
@@ -57,7 +58,7 @@ export default function AdminLogin() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

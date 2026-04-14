@@ -14,12 +14,13 @@ export default function AdminPromotions() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [customerCount, setCustomerCount] = useState(0);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // 📥 Fetch campaign logs
   const fetchLogs = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/promotions", {
+      const res = await fetch(`${API_URL}/promotions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -35,7 +36,7 @@ export default function AdminPromotions() {
   const fetchCustomerCount = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/service/customers", {
+      const res = await fetch(`${API_URL}/service/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -60,7 +61,7 @@ export default function AdminPromotions() {
     setSending(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/promotions", {
+      const res = await fetch(`${API_URL}/promotions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
