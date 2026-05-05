@@ -8,7 +8,7 @@ dotenv.config();
 const createAdmin = async () => {
   await mongoose.connect(process.env.MONGO_URI);
 
-  const hashedPassword = await bcrypt.hash("admin123", 10);
+  const hashedPassword = await bcrypt.hash("Nitin932@", 10);
 
   const adminExists = await User.findOne({ email: "admin@gmail.com" });
 

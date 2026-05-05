@@ -21,15 +21,12 @@ export default function AdminCustomers() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(
-        `${API_URL}/service/customer/toggle/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const res = await fetch(`${API_URL}/service/customer/toggle/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       const data = await res.json();
 
@@ -113,7 +110,7 @@ export default function AdminCustomers() {
     },
   ];
 
-  // 🔘 Actions
+  // Actions
   const actions = (row) => (
     <div className="flex gap-2">
       {/* Service History */}
@@ -146,11 +143,6 @@ export default function AdminCustomers() {
     <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
       <div className="flex justify-between">
         <h1 className="text-2xl font-bold">Customers</h1>
-
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Customer
-        </Button>
       </div>
 
       <Table columns={columns} data={customers} actions={actions} />
