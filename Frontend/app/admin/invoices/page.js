@@ -328,7 +328,6 @@ export default function AdminInvoices() {
         return;
       }
       setInvoices(data.data);
-      console.log("Fetched invoices:", data.data);
     } catch {
       toast.error("Server error");
     } finally {

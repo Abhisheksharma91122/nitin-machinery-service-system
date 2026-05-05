@@ -52,7 +52,6 @@ export default function AdminDashboard() {
 
         const statsData = await resStats.json();
         const reqsData = await resReqs.json();
-        console.log(statsData, reqsData)
 
         if (!resReqs.ok) {
           toast.error(reqsData.message || "Failed to load requests");

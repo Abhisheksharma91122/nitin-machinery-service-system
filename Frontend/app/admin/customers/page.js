@@ -65,7 +65,6 @@ export default function AdminCustomers() {
       }
 
       setCustomers(data.data);
-      console.log("Fetched customers:", data.data);
     } catch {
       toast.error("Server error");
     }
