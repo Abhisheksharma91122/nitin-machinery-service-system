@@ -10,291 +10,468 @@ import jsPDF from "jspdf";
 export function generateInvoicePDF(inv) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-  const W = 210;
-  const H = 297;
-  const M = 18;
+  // ─── Page geometry ───────────────────────────────────────────────────────────
+  const PW = 210; // page width
+  const PH = 297; // page height
+  const ML = 15; // left margin
+  const MR = 15; // right margin
+  const CW = PW - ML - MR; // content width
 
-  // Colors
-  const PURPLE = [79, 70, 229];
-  const LIGHT_BG = [245, 243, 255];
-  const DARK = [30, 41, 59];
-  const MUTED = [100, 116, 139];
+  // ─── Colour palette (B&W only) ────────────────────────────────────────────
+  const BLACK = [0, 0, 0];
   const WHITE = [255, 255, 255];
-  const LINE = [226, 232, 240];
+  const DARK = [30, 30, 30];
+  const GREY = [80, 80, 80];
+  const LGREY = [180, 180, 180];
+  const BGLT = [245, 245, 245]; // very light grey for alternating rows
 
-  // Helper function
-  const box = (x, y, w, h, fill) => {
-    doc.setFillColor(...fill);
-    doc.roundedRect(x, y, w, h, 3, 3, "F");
+  // ─── Typography helpers ───────────────────────────────────────────────────
+  const bold = (sz) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(sz);
+  };
+  const normal = (sz) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(sz);
+  };
+  const italic = (sz) => {
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(sz);
+  };
+  const setColor = (rgb) => {
+    doc.setTextColor(...rgb);
   };
 
-  // Safely extract order data
+  // ─── Draw helpers ─────────────────────────────────────────────────────────
+  const hline = (y, x1 = ML, x2 = ML + CW, lw = 0.3, color = LGREY) => {
+    doc.setLineWidth(lw);
+    doc.setDrawColor(...color);
+    doc.line(x1, y, x2, y);
+  };
+  const thickHline = (y) => hline(y, ML, ML + CW, 0.8, BLACK);
+  const filledRect = (x, y, w, h, fill) => {
+    doc.setFillColor(...fill);
+    doc.rect(x, y, w, h, "F");
+  };
+
+  // ─── Data extraction ─────────────────────────────────────────────────────
   const order = inv.orderId ?? inv.order ?? {};
 
-  // Determine status with fallback
-  const status = inv.status || (inv.amount ? "unpaid" : "pending");
+  // Invoice ID
+  let invId;
+  if (inv._id) invId = inv._id.slice(-8).toUpperCase();
+  else if (order._id) invId = order._id.slice(-8).toUpperCase();
+  else if (order.orderId) invId = order.orderId.slice(-8).toUpperCase();
+  else invId = Math.random().toString(36).slice(2, 10).toUpperCase();
 
-  const statusColors = {
-    paid: { bg: [220, 252, 231], fg: [22, 163, 74] },
-    unpaid: { bg: [254, 226, 226], fg: [220, 38, 38] },
-    pending: { bg: [254, 243, 199], fg: [217, 119, 6] },
-    cancelled: { bg: [229, 231, 235], fg: [75, 85, 99] },
+  // Dates
+  const srcDate = inv.createdAt || order.createdAt;
+  const invoiceDate = srcDate
+    ? new Date(srcDate).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : new Date().toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+  const dueDateObj = srcDate ? new Date(srcDate) : new Date();
+  dueDateObj.setDate(dueDateObj.getDate() + 30);
+  const dueDate = dueDateObj.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  // Status
+  const rawStatus = (inv.status || "unpaid").toLowerCase();
+  const statusLabel = rawStatus.toUpperCase();
+
+  // ─── CUSTOMER DATA EXTRACTION (FIXED) ─────────────────────────────────────
+  // Try multiple data sources
+  const customerObj = inv.customer || order.customer || {};
+
+  const customerName =
+    inv.customerName || customerObj.name || order.customerName || "—";
+
+  const customerAddr =
+    inv.customerAddress || customerObj.address || order.customerAddress || "—";
+
+  const customerPhone =
+    inv.contactNumber ||
+    inv.phone ||
+    customerObj.contactNumber ||
+    customerObj.phone ||
+    order.contactNumber ||
+    "—";
+
+  // GSTIN - with proper handling
+  const customerGSTIN =
+    inv.customerGSTIN ||
+    customerObj.gstin ||
+    customerObj.gstNumber ||
+    inv.gstin ||
+    "URP"; // Unregistered Person
+
+  // ─── STATE DETECTION FOR GST CALCULATION ──────────────────────────────────
+  // Default to Maharashtra (Intra-state = CGST + SGST)
+  // Extract state code from customer address or use a mapping
+  const getStateFromAddress = (address) => {
+    if (!address) return "27"; // Maharashtra default
+    const addr = address.toUpperCase();
+    if (addr.includes("MAHARASHTRA")) return "27";
+    if (addr.includes("KARNATAKA")) return "29";
+    if (addr.includes("TAMIL NADU")) return "33";
+    if (addr.includes("TELANGANA")) return "36";
+    if (addr.includes("RAJASTHAN")) return "08";
+    if (addr.includes("DELHI")) return "07";
+    if (addr.includes("GUJARAT")) return "24";
+    if (addr.includes("HARYANA")) return "06";
+    if (addr.includes("PUNJAB")) return "03";
+    if (addr.includes("UTTAR PRADESH")) return "09";
+    return "27"; // Default to Maharashtra
   };
 
-  const sc = statusColors[status.toLowerCase()] || statusColors.pending;
+  const stateCode = getStateFromAddress(customerAddr);
+  const isIntraState = stateCode === "27"; // Maharashtra
 
-  // ===== HEADER =====
-  doc.setFillColor(...PURPLE);
-  doc.rect(0, 0, W, 50, "F");
+  // Service details
+  const machineName = order.machineName || inv.machine || "—";
+  const orderDisplayId =
+    order.orderId || (order._id ? order._id.slice(-8).toUpperCase() : "N/A");
 
-  doc.setTextColor(...WHITE);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(28);
-  doc.text("INVOICE", M, 28);
+  let problemDesc = order.problemDescription || inv.issue || "—";
+  if (problemDesc.length > 90) problemDesc = problemDesc.slice(0, 87) + "...";
 
-  // Generate invoice ID from available data
-  let invId = "";
-  if (inv._id) {
-    invId = inv._id.slice(-6).toUpperCase();
-  } else if (order._id) {
-    invId = order._id.slice(-6).toUpperCase();
-  } else if (inv.orderId?.orderId) {
-    invId = inv.orderId.orderId.slice(-6).toUpperCase();
+  // Amounts
+  let taxableAmount = 0;
+  const raw = inv.amount ?? inv.taxableAmount ?? order.amount ?? 0;
+  if (typeof raw === "number") {
+    taxableAmount = raw;
   } else {
-    invId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    taxableAmount = parseFloat(String(raw).replace(/[^\d.]/g, "")) || 0;
   }
 
-  // Handle date formatting safely
-  let date = new Date().toLocaleDateString("en-IN");
-  let dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 30);
-  dueDate = dueDate.toLocaleDateString("en-IN");
+  // ─── GST CALCULATION (FIXED FOR IGST) ──────────────────────────────────────
+  let cgstAmt = 0;
+  let sgstAmt = 0;
+  let igstAmt = 0;
+  let totalGST = 0;
+  let gstLabel = "";
 
-  if (inv.createdAt) {
-    date = new Date(inv.createdAt).toLocaleDateString("en-IN");
-    const due = new Date(inv.createdAt);
-    due.setDate(due.getDate() + 30);
-    dueDate = due.toLocaleDateString("en-IN");
-  } else if (order.createdAt) {
-    date = new Date(order.createdAt).toLocaleDateString("en-IN");
-    const due = new Date(order.createdAt);
-    due.setDate(due.getDate() + 30);
-    dueDate = due.toLocaleDateString("en-IN");
-  }
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Date: ${date}`, W - M, 20, { align: "right" });
-  doc.text(`Due: ${dueDate}`, W - M, 26, { align: "right" });
-
-  doc.setFont("helvetica", "bold");
-  doc.text(`Invoice #${invId}`, W - M, 34, { align: "right" });
-
-  // Status badge
-  doc.setFillColor(...sc.bg);
-  doc.roundedRect(W - M - 25, 36, 25, 8, 2, 2, "F");
-
-  doc.setFontSize(8);
-  doc.setTextColor(...sc.fg);
-  doc.text(status.toUpperCase(), W - M - 12.5, 41, {
-    align: "center",
-  });
-
-  // ===== CARDS =====
-  const top = 60;
-  const cardW = (W - 2 * M - 6) / 2;
-
-  box(M, top, cardW, 34, LIGHT_BG);
-
-  doc.setFontSize(9);
-  doc.setTextColor(...PURPLE);
-  doc.setFont("helvetica", "bold");
-  doc.text("BILLED TO", M + 4, top + 8);
-
-  doc.setFontSize(10);
-  doc.setTextColor(...DARK);
-  // Handle customer name from multiple possible fields
-  const customerName =
-    inv.customerName ||
-    inv.billedTo ||
-    order.customerName ||
-    (order.machineName ? `Customer for ${order.machineName}` : "-");
-  doc.text(customerName, M + 4, top + 16);
-
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-
-  // Handle machine name
-  const machineName =
-    order.machineName ||
-    inv.machine ||
-    (order.machine ? order.machine.name : "-");
-  doc.text(`Machine: ${machineName}`, M + 4, top + 24);
-
-  // Handle issue description
-  let issueText =
-    order.problemDescription || inv.issue || (order.issue ? order.issue : "-");
-  if (issueText.length > 40) issueText = issueText.slice(0, 37) + "...";
-  doc.text(`Issue: ${issueText}`, M + 4, top + 30);
-
-  const cx = M + cardW + 6;
-
-  box(cx, top, cardW, 34, LIGHT_BG);
-
-  doc.setFontSize(9);
-  doc.setTextColor(...PURPLE);
-  doc.setFont("helvetica", "bold");
-  doc.text("FROM", cx + 4, top + 8);
-
-  doc.setFontSize(10);
-  doc.setTextColor(...DARK);
-  doc.text("Nitin Machinery Services", cx + 4, top + 16);
-
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  doc.text("Sinnar, Nashik, Maharashtra", cx + 4, top + 24);
-  doc.text("+91 98501 30575", cx + 4, top + 30);
-
-  // ===== TABLE =====
-  const tableTop = top + 50;
-
-  // INCREASED HEIGHT of blue header row from 10 to 14mm
-  const headerHeight = 14;
-  const rowHeight = 12; // Slightly increased row height as well
-
-  // EXTENDED the purple stripe to the right edge
-  doc.setFillColor(...PURPLE);
-  doc.roundedRect(M, tableTop, W - M - 5, headerHeight, 2, 2, "F");
-
-  const cols = ["Service", "Order ID", "Date", "Amount"];
-  // Adjusted column positions to accommodate the wider stripe
-  const colX = [M + 5, M + 85, M + 125, W - M - 8];
-
-  // INCREASED font size for better visibility
-  doc.setFontSize(10);
-  doc.setTextColor(...WHITE);
-  doc.setFont("helvetica", "bold");
-
-  cols.forEach((c, i) => {
-    // Center text vertically in the taller header
-    doc.text(
-      c,
-      colX[i],
-      tableTop + headerHeight / 2 + 1.5,
-      i === 3 ? { align: "right" } : {},
-    );
-  });
-
-  // Data row with increased height - also extended to match
-  doc.setFillColor(...LIGHT_BG);
-  doc.rect(M, tableTop + headerHeight, W - M - 5, rowHeight, "F");
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9.5);
-  doc.setTextColor(...DARK);
-
-  // Get order ID for display
-  let displayOrderId = "#";
-  if (order.orderId) {
-    displayOrderId += order.orderId.slice(-6).toUpperCase();
-  } else if (order._id) {
-    displayOrderId += order._id.slice(-6).toUpperCase();
+  if (isIntraState) {
+    // Intra-state: CGST 9% + SGST 9% (for SAC 998719)
+    const cgstRate = 0.09;
+    const sgstRate = 0.09;
+    cgstAmt = taxableAmount * cgstRate;
+    sgstAmt = taxableAmount * sgstRate;
+    totalGST = cgstAmt + sgstAmt;
+    gstLabel = "CGST+SGST";
   } else {
-    displayOrderId += "N/A";
+    // Inter-state: IGST 18% (for SAC 998719)
+    const igstRate = 0.18;
+    igstAmt = taxableAmount * igstRate;
+    totalGST = igstAmt;
+    gstLabel = "IGST";
   }
 
-  // Get service name
-  const serviceName =
-    order.machineName ||
-    inv.service ||
-    (order.service ? order.service.name : "Service");
+  const grandTotal = taxableAmount + totalGST;
 
-  // Get order date
-  let orderDate = new Date().toLocaleDateString("en-IN");
-  if (order.createdAt) {
-    orderDate = new Date(order.createdAt).toLocaleDateString("en-IN");
-  } else if (order.date) {
-    orderDate = order.date;
-  }
+  const fmt = (n) =>
+    `Rs. ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  // Get amount - handle number with or without currency symbol
-  let amount = 0;
-  if (typeof inv.amount === "number") {
-    amount = inv.amount;
-  } else if (typeof inv.amount === "string") {
-    // Handle string like "1 45,000" -> 145000
-    const cleaned = inv.amount.replace(/\s/g, "").replace(/,/g, "");
-    amount = parseFloat(cleaned) || 0;
-  } else if (inv.total) {
-    amount =
-      typeof inv.total === "number" ? inv.total : parseFloat(inv.total) || 0;
-  } else if (order.amount) {
-    amount =
-      typeof order.amount === "number"
-        ? order.amount
-        : parseFloat(order.amount) || 0;
-  }
-
-  const row = [
-    serviceName,
-    displayOrderId,
-    orderDate,
-    `₹ ${amount.toLocaleString("en-IN")}`,
+  // ─── Amount-in-words ─────────────────────────────────────────────────────
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
   ];
-
-  // Center text vertically in the taller row
-  row.forEach((r, i) => {
-    doc.text(
-      r,
-      colX[i],
-      tableTop + headerHeight + rowHeight / 2 + 1.5,
-      i === 3 ? { align: "right" } : {},
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+  function numToWords(n) {
+    n = Math.round(n);
+    if (n === 0) return "Zero";
+    if (n < 20) return ones[n];
+    if (n < 100)
+      return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+    if (n < 1000)
+      return (
+        ones[Math.floor(n / 100)] +
+        " Hundred" +
+        (n % 100 ? " " + numToWords(n % 100) : "")
+      );
+    if (n < 100000)
+      return (
+        numToWords(Math.floor(n / 1000)) +
+        " Thousand" +
+        (n % 1000 ? " " + numToWords(n % 1000) : "")
+      );
+    if (n < 10000000)
+      return (
+        numToWords(Math.floor(n / 100000)) +
+        " Lakh" +
+        (n % 100000 ? " " + numToWords(n % 100000) : "")
+      );
+    return (
+      numToWords(Math.floor(n / 10000000)) +
+      " Crore" +
+      (n % 10000000 ? " " + numToWords(n % 10000000) : "")
     );
-  });
+  }
+  const amtWords = numToWords(Math.round(grandTotal)) + " Rupees Only";
 
-  // ===== TOTAL =====
-  const totalTop = tableTop + headerHeight + rowHeight + 15;
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  LAYOUT — top → bottom
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  doc.setDrawColor(...LINE);
-  doc.line(M, totalTop, W - M, totalTop);
+  let Y = 14; // running cursor
 
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...DARK);
+  // ─── 1. Header bar ────────────────────────────────────────────────────────
+  filledRect(0, 0, PW, 26, BLACK);
 
-  // Moved "Total" label further left
-  doc.text("Total", W - M - 60, totalTop + 10);
+  bold(18);
+  setColor(WHITE);
+  doc.text("NITIN MACHINERY SERVICES", ML, 12);
 
-  doc.setTextColor(...PURPLE);
-  doc.setFontSize(14);
-  // Moved the amount further left as well
-  doc.text(`₹ ${amount.toLocaleString("en-IN")}`, W - M - 10, totalTop + 10, {
+  normal(7.5);
+  doc.text("Sinnar, Nashik, Maharashtra — 422 103", ML, 18);
+  doc.text("Ph: +91 98501 30575  |  GSTIN: 27XXXXX0000X1ZX", ML, 23);
+
+  bold(9);
+  doc.text("TAX INVOICE", PW - MR, 12, { align: "right" });
+  normal(7.5);
+  doc.text("(Original for Recipient)", PW - MR, 18, { align: "right" });
+
+  Y = 34;
+
+  // ─── 2. Invoice meta strip ────────────────────────────────────────────────
+  thickHline(Y - 2);
+
+  bold(8.5);
+  setColor(DARK);
+  doc.text(`Invoice No.: INV-${invId}`, ML, Y + 4);
+  doc.text(`Invoice Date: ${invoiceDate}`, ML, Y + 10);
+  doc.text(`Due Date: ${dueDate}`, ML, Y + 16);
+
+  doc.text(`Status: ${statusLabel}`, PW - MR, Y + 4, { align: "right" });
+  doc.text(`SAC Code: 998719`, PW - MR, Y + 10, { align: "right" });
+  doc.text(`Place of Supply: Maharashtra (${stateCode})`, PW - MR, Y + 16, {
     align: "right",
   });
 
-  // ===== FOOTER =====
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  doc.setFont("helvetica", "italic");
+  Y += 22;
+  thickHline(Y);
 
-  doc.text("Thank you for your business!", W / 2, H - 20, {
-    align: "center",
+  // ─── 3. Bill To / Ship To ────────────────────────────────────────────────
+  Y += 5;
+
+  const colMid = ML + CW / 2;
+
+  bold(8);
+  setColor(GREY);
+  doc.text("BILL TO", ML, Y);
+  doc.text("SERVICE DETAILS", colMid + 2, Y);
+
+  hline(Y + 1, ML, colMid - 2);
+  hline(Y + 1, colMid + 2, ML + CW);
+
+  Y += 6;
+
+  bold(9);
+  setColor(DARK);
+  doc.text(customerName, ML, Y);
+
+  normal(8);
+  setColor(GREY);
+  // wrap address if long
+  const addrLines = doc.splitTextToSize(customerAddr, 80);
+  addrLines.forEach((line, i) => doc.text(line, ML, Y + 5 + i * 5));
+  const addrH = addrLines.length * 5;
+
+  doc.text(`GSTIN: ${customerGSTIN}`, ML, Y + 5 + addrH);
+  doc.text(`Ph: ${customerPhone}`, ML, Y + 10 + addrH);
+
+  // Right column — service details
+  bold(8.5);
+  setColor(DARK);
+  doc.text(`Machine: ${machineName}`, colMid + 2, Y);
+  normal(8);
+  setColor(GREY);
+  doc.text(`Order Ref: #${orderDisplayId}`, colMid + 2, Y + 6);
+  const descLines = doc.splitTextToSize(`Problem: ${problemDesc}`, 80);
+  descLines.forEach((line, i) => doc.text(line, colMid + 2, Y + 12 + i * 5));
+
+  Y += 22 + Math.max(addrH, descLines.length * 5);
+  thickHline(Y);
+
+  // ─── 4. Items table ──────────────────────────────────────────────────────
+  Y += 2;
+
+  const tRowH = 7;
+
+  // Table header - Dynamic based on GST type
+  filledRect(ML, Y, CW, tRowH, BLACK);
+  bold(7.5);
+  setColor(WHITE);
+  doc.text("#", ML + 1, Y + 5);
+  doc.text("Description of Service", ML + 7, Y + 5);
+  doc.text("SAC", ML + 92, Y + 5, { align: "center" });
+  doc.text("Taxable Amt (Rs.)", ML + 120, Y + 5, { align: "right" });
+
+  if (isIntraState) {
+    doc.text("CGST @9%", ML + 148, Y + 5, { align: "right" });
+    doc.text("SGST @9%", ML + 164, Y + 5, { align: "right" });
+  } else {
+    doc.text("IGST @18%", ML + 148, Y + 5, { align: "right" });
+  }
+
+  doc.text("Total (Rs.)", ML + CW, Y + 5, { align: "right" });
+
+  Y += tRowH;
+
+  // Single data row
+  filledRect(ML, Y, CW, tRowH + 2, BGLT);
+  normal(8);
+  setColor(DARK);
+
+  const serviceDesc = `Repair & Maintenance — ${machineName}`;
+  doc.text("1", ML + 1, Y + 6);
+  doc.text(serviceDesc, ML + 7, Y + 6);
+  doc.text("998719", ML + 92, Y + 6, { align: "center" });
+  doc.text(taxableAmount.toFixed(2), ML + 120, Y + 6, { align: "right" });
+
+  if (isIntraState) {
+    doc.text(cgstAmt.toFixed(2), ML + 148, Y + 6, { align: "right" });
+    doc.text(sgstAmt.toFixed(2), ML + 164, Y + 6, { align: "right" });
+  } else {
+    doc.text(igstAmt.toFixed(2), ML + 148, Y + 6, { align: "right" });
+  }
+
+  doc.text(grandTotal.toFixed(2), ML + CW, Y + 6, { align: "right" });
+
+  Y += tRowH + 2;
+  hline(Y, ML, ML + CW, 0.5, DARK);
+
+  // ─── 5. Totals block ─────────────────────────────────────────────────────
+  Y += 4;
+
+  const tX = ML + CW - 90; // left edge of totals table
+  const tW = 90;
+  const tLH = 7;
+
+  const totRow = (label, value, isBold = false) => {
+    isBold ? bold(8.5) : normal(8);
+    setColor(DARK);
+    doc.text(label, tX, Y + 5);
+    doc.text(value, tX + tW, Y + 5, { align: "right" });
+    Y += tLH;
+  };
+
+  totRow("Taxable Amount", `Rs. ${taxableAmount.toFixed(2)}`);
+  hline(Y - 1, tX, tX + tW);
+
+  if (isIntraState) {
+    totRow("CGST @ 9%", `Rs. ${cgstAmt.toFixed(2)}`);
+    totRow("SGST @ 9%", `Rs. ${sgstAmt.toFixed(2)}`);
+  } else {
+    totRow("IGST @ 18%", `Rs. ${igstAmt.toFixed(2)}`);
+  }
+
+  hline(Y - 1, tX, tX + tW, 0.5, DARK);
+  totRow("Total Tax (GST)", `Rs. ${totalGST.toFixed(2)}`);
+  hline(Y - 1, tX, tX + tW, 0.5, DARK);
+  filledRect(tX - 2, Y - 1, tW + 4, tLH + 2, BLACK);
+  bold(10);
+  setColor(WHITE);
+  doc.text("GRAND TOTAL", tX, Y + 6);
+  doc.text(grandTotal.toFixed(2), tX + tW, Y + 6, { align: "right" });
+  setColor(DARK);
+  Y += tLH + 6;
+
+  // Amount in words
+  normal(8);
+  setColor(GREY);
+  const wordsLines = doc.splitTextToSize(
+    `Amount in Words: ${amtWords}`,
+    CW - 5,
+  );
+  wordsLines.forEach((line) => {
+    doc.text(line, ML, Y);
+    Y += 5;
   });
 
-  doc.setFillColor(...PURPLE);
-  doc.rect(0, H - 10, W, 10, "F");
+  Y += 4;
+  thickHline(Y);
+  
+  // ─── 7. Signature & Declaration ──────────────────────────────────────────
+  Y += 6;
 
-  doc.setTextColor(...WHITE);
-  doc.setFontSize(7);
+  normal(7.5);
+  setColor(GREY);
+  const decl =
+    "We hereby certify that the services mentioned in this invoice have been rendered and the amount shown represents the true and correct value of such services.";
+  const declLines = doc.splitTextToSize(decl, CW * 0.55);
+  declLines.forEach((line) => {
+    doc.text(line, ML, Y);
+    Y += 4.5;
+  });
 
+  // Signature box — right
+  const sigX = ML + CW - 60;
+  const sigY = Y - declLines.length * 4.5 - 2;
+  doc.rect(sigX, sigY, 60, 22);
+  bold(8);
+  setColor(DARK);
+  doc.text("For Nitin Machinery Services", sigX + 30, sigY + 4, {
+    align: "center",
+  });
+  normal(7.5);
+  setColor(GREY);
+  doc.text("Authorised Signatory", sigX + 30, sigY + 18, { align: "center" });
+
+  // ─── 8. Footer ────────────────────────────────────────────────────────────
+  filledRect(0, PH - 10, PW, 10, BLACK);
+  bold(7);
+  setColor(WHITE);
   doc.text(
-    "Nitin Machinery Services • Nashik • +91 98501 30575",
-    W / 2,
-    H - 4,
+    "Nitin Machinery Services  |  Sinnar, Nashik, Maharashtra  |  +91 98501 30575",
+    PW / 2,
+    PH - 4,
     { align: "center" },
   );
 
-  doc.save(`invoice_${invId}.pdf`);
+  // ─── Save ─────────────────────────────────────────────────────────────────
+  doc.save(`invoice_INV-${invId}.pdf`);
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -308,6 +485,9 @@ export default function AdminInvoices() {
     orderId: "",
     customerName: "",
     amount: "",
+    customerAddress: "",
+    customerPhone: "",
+    customerGSTIN: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -342,8 +522,8 @@ export default function AdminInvoices() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success)
-        setOrders(data.data.filter((o) => o.status === "completed"));
+      const filtered = data.data.filter((o) => o.status === "completed");
+      setOrders(filtered);
     } catch {
       toast.error("Failed to load orders");
     }
@@ -351,11 +531,12 @@ export default function AdminInvoices() {
 
   useEffect(() => {
     fetchInvoices();
+    fetchOrders();
   }, []);
 
   const handleCreateInvoice = async () => {
     if (!form.orderId || !form.customerName || !form.amount) {
-      toast.error("All fields are required");
+      toast.error("Order, customer name, and amount are required");
       return;
     }
     setSubmitting(true);
@@ -370,6 +551,9 @@ export default function AdminInvoices() {
         body: JSON.stringify({
           orderId: form.orderId,
           customerName: form.customerName,
+          customerAddress: form.customerAddress,
+          contactNumber: form.customerPhone,
+          customerGSTIN: form.customerGSTIN || "URP",
           amount: Number(form.amount),
         }),
       });
@@ -380,7 +564,14 @@ export default function AdminInvoices() {
       }
       toast.success("Invoice created ✅");
       setShowModal(false);
-      setForm({ orderId: "", customerName: "", amount: "" });
+      setForm({
+        orderId: "",
+        customerName: "",
+        amount: "",
+        customerAddress: "",
+        customerPhone: "",
+        customerGSTIN: "",
+      });
       fetchInvoices();
     } catch {
       toast.error("Server error");
@@ -416,10 +607,11 @@ export default function AdminInvoices() {
       toast.error("No data to export");
       return;
     }
-    const headers = ["Invoice ID", "Customer", "Amount", "Date", "Status"];
+    const headers = ["Invoice ID", "Customer", "Phone", "Amount", "Date", "Status"];
     const rows = invoices.map((inv) => [
       inv._id,
       inv.customerName,
+      inv.contactNumber || inv.phone || inv.customer?.contactNumber || inv.customer?.phone || inv.order?.contactNumber || "—",
       inv.amount,
       new Date(inv.createdAt).toLocaleDateString(),
       inv.status,
@@ -445,6 +637,14 @@ export default function AdminInvoices() {
       ),
     },
     { header: "Customer", accessor: "customerName" },
+    {
+      header: "Phone",
+      accessor: "contactNumber",
+      cell: (row) => {
+        const phone = row.contactNumber || row.phone || row.customer?.contactNumber || row.customer?.phone || row.order?.contactNumber || "—";
+        return <span className="text-zinc-600">{phone}</span>;
+      },
+    },
     {
       header: "Amount",
       accessor: "amount",
@@ -541,7 +741,6 @@ export default function AdminInvoices() {
 
           <Button
             onClick={() => {
-              fetchOrders();
               setShowModal(true);
             }}
             className="h-9 text-sm"
@@ -561,10 +760,10 @@ export default function AdminInvoices() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-700"
+              className="absolute top-1 right-4 text-zinc-400 hover:text-zinc-700 sticky"
             >
               <X className="h-5 w-5" />
             </button>
@@ -591,6 +790,9 @@ export default function AdminInvoices() {
                       ...prev,
                       orderId: e.target.value,
                       customerName: selected?.customer?.name || "",
+                      customerAddress: selected?.customer?.address || "",
+                      customerPhone: selected?.customer?.contactNumber || "",
+                      customerGSTIN: selected?.customer?.gstin || "",
                       amount: "",
                     }));
                   }}
@@ -621,6 +823,51 @@ export default function AdminInvoices() {
                     setForm({ ...form, customerName: e.target.value })
                   }
                   placeholder="Customer name"
+                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-blue"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Customer Address
+                </label>
+                <input
+                  type="text"
+                  value={form.customerAddress}
+                  onChange={(e) =>
+                    setForm({ ...form, customerAddress: e.target.value })
+                  }
+                  placeholder="Customer address"
+                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-blue"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Customer Phone
+                </label>
+                <input
+                  type="tel"
+                  value={form.customerPhone}
+                  onChange={(e) =>
+                    setForm({ ...form, customerPhone: e.target.value })
+                  }
+                  placeholder="Customer phone"
+                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-blue"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Customer GSTIN (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={form.customerGSTIN}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      customerGSTIN: e.target.value.toUpperCase(),
+                    })
+                  }
+                  placeholder="e.g., 27XXXXX0000X1ZX or leave blank for URP"
                   className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-blue"
                 />
               </div>

@@ -8,6 +8,9 @@ const invoiceSchema = new mongoose.Schema(
       required: true,
     },
     customerName: String,
+    customerAddress: String,
+    contactNumber: String,
+    customerGSTIN: String,
     amount: Number,
     status: {
       type: String,

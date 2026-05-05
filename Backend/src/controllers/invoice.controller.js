@@ -2,7 +2,7 @@ import Invoice from "../models/invoice.model.js";
 
 export const createInvoice = async (req, res) => {
   try {
-    const { orderId, customerName, amount } = req.body;
+    const { orderId, customerName, customerAddress, contactNumber, customerGSTIN, amount } = req.body;
 
     const existingInvoice = await Invoice.findOne({ orderId });
     if (existingInvoice) {
@@ -14,6 +14,9 @@ export const createInvoice = async (req, res) => {
     const invoice = await Invoice.create({
       orderId,
       customerName,
+      customerAddress,
+      contactNumber,
+      customerGSTIN,
       amount,
     });
 
@@ -30,7 +33,12 @@ export const createInvoice = async (req, res) => {
 export const getInvoices = async (req, res) => {
   try {
     const invoices = await Invoice.find()
-      .populate("orderId") //populate order details
+      .populate({
+        path: "orderId",
+        populate: {
+          path: "customer"
+        }
+      }) //populate order details and customer
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: invoices });
