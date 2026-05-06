@@ -69,7 +69,6 @@ export default function AdminCustomers() {
       );
 
       setCustomers(sorted);
-      console.log(sorted);
     } catch {
       toast.error("Server error");
     }
