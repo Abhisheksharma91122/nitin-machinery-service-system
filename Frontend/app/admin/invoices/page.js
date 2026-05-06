@@ -265,7 +265,7 @@ export function generateInvoicePDF(inv) {
 
   normal(7.5);
   doc.text("Sinnar, Nashik, Maharashtra — 422 103", ML, 18);
-  doc.text("Ph: +91 98501 30575  |  GSTIN: 27XXXXX0000X1ZX", ML, 23);
+  doc.text("Ph: +91 98501 30575  |  GSTIN: 27AHVPK8677P1ZW", ML, 23);
 
   bold(9);
   doc.text("TAX INVOICE", PW - MR, 12, { align: "right" });
@@ -432,7 +432,7 @@ export function generateInvoicePDF(inv) {
 
   Y += 4;
   thickHline(Y);
-  
+
   // ─── 7. Signature & Declaration ──────────────────────────────────────────
   Y += 6;
 
@@ -607,11 +607,23 @@ export default function AdminInvoices() {
       toast.error("No data to export");
       return;
     }
-    const headers = ["Invoice ID", "Customer", "Phone", "Amount", "Date", "Status"];
+    const headers = [
+      "Invoice ID",
+      "Customer",
+      "Phone",
+      "Amount",
+      "Date",
+      "Status",
+    ];
     const rows = invoices.map((inv) => [
       inv._id,
       inv.customerName,
-      inv.contactNumber || inv.phone || inv.customer?.contactNumber || inv.customer?.phone || inv.order?.contactNumber || "—",
+      inv.contactNumber ||
+        inv.phone ||
+        inv.customer?.contactNumber ||
+        inv.customer?.phone ||
+        inv.order?.contactNumber ||
+        "—",
       inv.amount,
       new Date(inv.createdAt).toLocaleDateString(),
       inv.status,
@@ -641,7 +653,13 @@ export default function AdminInvoices() {
       header: "Phone",
       accessor: "contactNumber",
       cell: (row) => {
-        const phone = row.contactNumber || row.phone || row.customer?.contactNumber || row.customer?.phone || row.order?.contactNumber || "—";
+        const phone =
+          row.contactNumber ||
+          row.phone ||
+          row.customer?.contactNumber ||
+          row.customer?.phone ||
+          row.order?.contactNumber ||
+          "—";
         return <span className="text-zinc-600">{phone}</span>;
       },
     },

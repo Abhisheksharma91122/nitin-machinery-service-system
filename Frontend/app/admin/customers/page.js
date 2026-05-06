@@ -64,7 +64,12 @@ export default function AdminCustomers() {
         return;
       }
 
-      setCustomers(data.data);
+      const sorted = data.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+
+      setCustomers(sorted);
+      console.log(sorted);
     } catch {
       toast.error("Server error");
     }
